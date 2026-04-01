@@ -5,6 +5,14 @@ import { db } from '../config/database'
 import { tmdbService } from './tmdb.service'
 import { Favorite } from '../types'
 
+// tipo genérico pra aceitar tanto filme quanto série
+type MediaItem = {
+  id: number
+  vote_average: number
+  genre_ids: number[]
+  [key: string]: unknown
+}
+
 export const recommendationService = {
   async getForUser(userId: number, mediaType: 'movie' | 'tv' = 'movie') {
 
@@ -21,7 +29,6 @@ export const recommendationService = {
     }
 
     // conta quantas vezes cada gênero aparece nos favoritos
-    // ex: se o usuário favoritou 5 filmes de ação, ação vai ter contagem 5
     const genreCount: Record<number, number> = {}
     favorites.forEach((fav) => {
       fav.genre_ids.forEach((gid) => {
@@ -49,8 +56,7 @@ export const recommendationService = {
 
     // junta tudo, remove duplicatas e remove o que já está nos favoritos
     const seen = new Set<number>()
-    const recommendations = results
-      .flatMap((r) => r.results)
+    const recommendations = (results.flatMap((r) => r.results) as MediaItem[])
       .filter((item) => {
         if (favoriteTmdbIds.has(item.id) || seen.has(item.id)) return false
         seen.add(item.id)
